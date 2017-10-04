@@ -2,10 +2,7 @@ package com.tamaskozmer.animateddashboard
 
 import android.annotation.TargetApi
 import android.content.Context
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.RectF
+import android.graphics.*
 import android.os.Build
 import android.os.Handler
 import android.os.SystemClock
@@ -21,7 +18,8 @@ import java.util.*
  */
 class PieChartView : View {
 
-    private val animationDuration = 300L
+    private val ANIMATION_DURATION = 300L
+    private val TAG = "PieChartView"
 
     private val data = mutableMapOf<String, Double>()
     private val pieSlices = mutableMapOf<String, PieSlice>()
@@ -34,16 +32,16 @@ class PieChartView : View {
 
     }
 
-    private var sum = 0.0;
+    private var dataValueSum = 0.0;
     private var chartRotation = 0F;
 
     private lateinit var rect: RectF;
     private lateinit var piePaint: Paint
+    private lateinit var center: Point
 
     private var animStartTime = 0L
     private var animatedRotation = 0F
     private var animationIncrement = 0F
-
     private var animationStartRotation = 0F
 
     private var selectedSlice: PieSlice? = null
@@ -73,75 +71,10 @@ class PieChartView : View {
 
     fun addDataEntry(key: String, value: Double) {
         data[key] = value
-        sum += value
+        dataValueSum += value
 
         pieSlices[key] = PieSlice(randomColor())
         calculateAngles()
-    }
-
-    private fun calculateAngles() {
-        var startAngle = 0F
-
-        for ((key, value) in data) {
-            Log.d("asd", "$key: ${pieSlices[key]?.color}")
-            val sweepAngle = calculateSweepAngle(value)
-
-            pieSlices[key]?.startAngle = startAngle
-            pieSlices[key]?.sweepAngle = sweepAngle
-
-            startAngle += sweepAngle
-        }
-    }
-
-    fun removeDataEntry(key: String) {
-        val value = data.remove(key)
-        value?.let {
-            sum -= value
-        }
-
-        pieSlices.remove(key)
-        calculateAngles()
-    }
-
-    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-        super.onSizeChanged(w, h, oldw, oldh)
-        rect = RectF(0F, 0F, w.toFloat(), h.toFloat())
-    }
-
-    override fun onDraw(canvas: Canvas) {
-        super.onDraw(canvas)
-
-        canvas.drawRGB(255, 255, 255)
-
-        var delta = SystemClock.uptimeMillis() - animStartTime
-        if (delta >= animationDuration) {
-           delta = 300;
-        }
-
-        animatedRotation = animationStartRotation + delta * animationIncrement
-        if (animatedRotation == chartRotation) {
-            stopAnimation()
-        }
-
-        Log.d("asd", "onDraw - delta: $delta, animated rotation: $animatedRotation, rotation: $chartRotation")
-
-        for ((_, value) in pieSlices) {
-            var alpha = 127
-            if (selectedSlice == null || value == selectedSlice) {
-                alpha = 255
-            }
-            val color = value.color
-            piePaint.color = Color.argb(alpha, Color.red(color), Color.green(color), Color.blue(color))
-            val startAngle = (value.startAngle + animatedRotation) % 360
-            canvas.drawArc(rect, startAngle, value.sweepAngle, true, piePaint)
-        }
-
-        piePaint.color = Color.rgb(255, 255, 255)
-        canvas.drawCircle(rect.width() / 2, rect.height() / 2, 50F, piePaint)
-    }
-
-    private fun calculateSweepAngle(value: Double): Float {
-        return (value / sum * 360).toFloat()
     }
 
     private fun randomColor(): Int {
@@ -152,18 +85,83 @@ class PieChartView : View {
         return Color.rgb(r, g, b)
     }
 
+    fun removeDataEntry(key: String) {
+        val value = data.remove(key)
+        value?.let {
+            dataValueSum -= value
+        }
+
+        pieSlices.remove(key)
+        calculateAngles()
+    }
+
+    private fun calculateAngles() {
+        var startAngle = 0F
+
+        for ((key, value) in data) {
+            val sweepAngle = (value / dataValueSum * 360).toFloat()
+
+            pieSlices[key]?.startAngle = startAngle
+            pieSlices[key]?.sweepAngle = sweepAngle
+
+            startAngle += sweepAngle
+        }
+    }
+
+    override fun onSizeChanged(width: Int, height: Int, oldWidth: Int, oldHeight: Int) {
+        super.onSizeChanged(width, height, oldWidth, oldHeight)
+        rect = RectF(0F, 0F, width.toFloat(), height.toFloat())
+        center = Point(width / 2, height / 2)
+        Log.d(TAG, "centerX: ${center.x}, centerY: ${center.y}")
+    }
+
+    override fun onDraw(canvas: Canvas) {
+        super.onDraw(canvas)
+
+        canvas.drawRGB(255, 255, 255)
+
+        handleRotationAnimation()
+
+        drawSlices(canvas)
+        drawCenterSpace(canvas)
+    }
+
+    private fun handleRotationAnimation() {
+        var delta = SystemClock.uptimeMillis() - animStartTime
+        if (delta >= ANIMATION_DURATION) {
+            delta = 300;
+        }
+
+        animatedRotation = animationStartRotation + delta * animationIncrement
+        if (animatedRotation == chartRotation) {
+            stopAnimation()
+        }
+    }
+
+    private fun drawSlices(canvas: Canvas) {
+        for ((_, value) in pieSlices) {
+            var alpha = 20
+            if (selectedSlice == null || value == selectedSlice) {
+                alpha = 255
+            }
+
+            val color = value.color
+            piePaint.color = Color.argb(alpha, Color.red(color), Color.green(color), Color.blue(color))
+            val startAngle = (value.startAngle + animatedRotation) % 360
+            canvas.drawArc(rect, startAngle, value.sweepAngle, true, piePaint)
+        }
+    }
+
+    private fun drawCenterSpace(canvas: Canvas) {
+        piePaint.color = Color.rgb(255, 255, 255)
+        canvas.drawCircle(rect.width() / 2, rect.height() / 2, 50F, piePaint)
+    }
+
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        Log.d("asd", "x: ${event.x}, y: ${event.y}")
+        Log.d(TAG, "x: ${event.x}, y: ${event.y}")
 
-        // TODO Detect clicked slice properly instead of this hack
-        isDrawingCacheEnabled = true
-        buildDrawingCache()
-        val pixel = drawingCache.getPixel(event.x.toInt(), event.y.toInt())
-        isDrawingCacheEnabled = false
-
-        // TODO Replace color hack
         for ((key, slice) in pieSlices) {
-            if (pixel == slice.color) {
+            if (sliceContainsPoint(slice, event.x, event.y)) {
                 pieSliceClicked(key, slice)
                 break
             }
@@ -172,20 +170,55 @@ class PieChartView : View {
         return super.onTouchEvent(event)
     }
 
+    private fun sliceContainsPoint(slice: PieSlice, x: Float, y: Float): Boolean {
+        val realX = x - center.x
+        val realY = y - center.y
+
+        val radius = Math.sqrt((realX * realX + realY * realY).toDouble())
+        val angle = Math.toDegrees(Math.atan2(realY.toDouble(), realX.toDouble()))
+
+        val realAngle = if (angle >= 0) angle else 360 + angle
+
+        Log.d(TAG, "angle: $realAngle, radius: $radius")
+
+        val startAngle = slice.startAngle + chartRotation
+
+        val endAngle = startAngle + slice.sweepAngle
+
+        if (endAngle > 360) {
+            if (realAngle > startAngle || realAngle < endAngle - 360) {
+                return true
+            }
+        } else {
+            if (realAngle > startAngle && realAngle < endAngle) {
+                return true
+            }
+        }
+
+        return false
+    }
+
     private fun pieSliceClicked(name: String, slice: PieSlice) {
-        Log.d("asd", "slice: $name")
+        Log.d(TAG, "slice: $name")
 
         selectedSlice = slice
 
-        val rotatingSliceOffset = 90 - slice.startAngle
+        calculateChartRotation(slice)
+        animationIncrement = (chartRotation - animatedRotation) / ANIMATION_DURATION
 
-        val newStartAngle = slice.startAngle + rotatingSliceOffset - slice.sweepAngle / 2
-        animationStartRotation = chartRotation;
-        chartRotation = newStartAngle - slice.startAngle
-
-        animationIncrement = (chartRotation - animatedRotation) / animationDuration
-//        invalidate()
         startAnimation()
+    }
+
+    private fun calculateChartRotation(selectedSlice: PieSlice) {
+        val rotatingSliceOffset = 90 - selectedSlice.startAngle
+
+        val newStartAngle = selectedSlice.startAngle + rotatingSliceOffset - selectedSlice.sweepAngle / 2
+        animationStartRotation = chartRotation;
+        chartRotation = newStartAngle - selectedSlice.startAngle
+
+        if (chartRotation < 0) {
+            chartRotation += 360
+        }
     }
 
     fun deselectSlice() {
@@ -193,9 +226,8 @@ class PieChartView : View {
 
         animationStartRotation = chartRotation;
         chartRotation = 0F
-        animationIncrement = (chartRotation - animatedRotation) / animationDuration
+        animationIncrement = (chartRotation - animatedRotation) / ANIMATION_DURATION
 
-//        invalidate()
         startAnimation()
     }
 
@@ -210,7 +242,6 @@ class PieChartView : View {
     }
 
     private fun stopAnimation() {
-        Log.d("asd", "Stop animation")
         animationHandler.removeCallbacks(animationRunnable)
         animatedRotation = chartRotation
         invalidate()
