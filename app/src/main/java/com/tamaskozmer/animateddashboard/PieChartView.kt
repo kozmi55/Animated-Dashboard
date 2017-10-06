@@ -223,14 +223,16 @@ class PieChartView : View {
         val realY = y - center.y
 
         val radius = Math.sqrt((realX * realX + realY * realY).toDouble())
+
+        if (radius < 150 || radius > rect.width() / 2) {
+            return false
+        }
+
         val angle = Math.toDegrees(Math.atan2(realY.toDouble(), realX.toDouble()))
 
         val realAngle = if (angle >= 0) angle else 360 + angle
 
-        Log.d(TAG, "angle: $realAngle, radius: $radius")
-
         val startAngle = slice.startAngle + chartRotation
-
         val endAngle = startAngle + slice.sweepAngle
 
         if (endAngle > 360) {
