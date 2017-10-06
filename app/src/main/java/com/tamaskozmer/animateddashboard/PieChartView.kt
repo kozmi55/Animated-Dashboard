@@ -18,7 +18,11 @@ import java.util.*
  */
 class PieChartView : View {
 
-    private val ANIMATION_DURATION = 300L
+    private val INITIAL_ANIMATION_DURATION = 750L
+    private val INIT_ANIMATION_INCREMENT = 360F / INITIAL_ANIMATION_DURATION
+
+    private val SELECT_ANIMATION_DURATION = 300L
+
     private val TAG = "PieChartView"
 
     private val data = mutableMapOf<String, Double>()
@@ -45,6 +49,11 @@ class PieChartView : View {
     private var animationStartRotation = 0F
 
     private var selectedSlice: PieSlice? = null
+
+    private var initialAnimationStartTime = 0L
+    private var initialAnimationAnimatedValue = 0F
+    private var initialAnimationStarted = false
+    private var initialAnimationFinished = false
 
     constructor(context: Context) : super(context) {
         init()
@@ -118,18 +127,44 @@ class PieChartView : View {
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
+        if (!initialAnimationStarted) {
+            startInitialAnimation()
+        }
+
         canvas.drawRGB(255, 255, 255)
 
+        handleInitAnimation()
         handleRotationAnimation()
 
         drawSlices(canvas)
         drawCenterSpace(canvas)
     }
 
+    private fun startInitialAnimation() {
+        initialAnimationStarted = true
+        initialAnimationStartTime = SystemClock.uptimeMillis()
+        animationHandler.removeCallbacks(animationRunnable)
+        animationHandler.post(animationRunnable)
+    }
+
+    private fun handleInitAnimation() {
+        var delta = SystemClock.uptimeMillis() - initialAnimationStartTime
+        if (delta >= INITIAL_ANIMATION_DURATION) {
+            delta = INITIAL_ANIMATION_DURATION;
+            initialAnimationAnimatedValue = 360F
+            initialAnimationFinished = true
+        }
+
+        initialAnimationAnimatedValue = (delta * INIT_ANIMATION_INCREMENT)
+        if (initialAnimationAnimatedValue == 360F) {
+            stopAnimation()
+        }
+    }
+
     private fun handleRotationAnimation() {
         var delta = SystemClock.uptimeMillis() - animStartTime
-        if (delta >= ANIMATION_DURATION) {
-            delta = 300;
+        if (delta >= SELECT_ANIMATION_DURATION) {
+            delta = SELECT_ANIMATION_DURATION;
         }
 
         animatedRotation = animationStartRotation + delta * animationIncrement
@@ -147,23 +182,36 @@ class PieChartView : View {
 
             val color = value.color
             piePaint.color = Color.argb(alpha, Color.red(color), Color.green(color), Color.blue(color))
+
             val startAngle = (value.startAngle + animatedRotation) % 360
-            canvas.drawArc(rect, startAngle, value.sweepAngle, true, piePaint)
+            var sweepAngle = value.sweepAngle;
+
+            if (!initialAnimationFinished) {
+                sweepAngle = if (initialAnimationAnimatedValue < startAngle) {
+                    0F
+                } else {
+                    minOf(initialAnimationAnimatedValue - startAngle, value.sweepAngle)
+                }
+            }
+
+            canvas.drawArc(rect, startAngle, sweepAngle, true, piePaint)
         }
     }
 
     private fun drawCenterSpace(canvas: Canvas) {
         piePaint.color = Color.rgb(255, 255, 255)
-        canvas.drawCircle(rect.width() / 2, rect.height() / 2, 50F, piePaint)
+        canvas.drawCircle(rect.width() / 2, rect.height() / 2, 150F, piePaint)
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         Log.d(TAG, "x: ${event.x}, y: ${event.y}")
 
-        for ((key, slice) in pieSlices) {
-            if (sliceContainsPoint(slice, event.x, event.y)) {
-                pieSliceClicked(key, slice)
-                break
+        if (initialAnimationFinished) {
+            for ((key, slice) in pieSlices) {
+                if (sliceContainsPoint(slice, event.x, event.y)) {
+                    pieSliceClicked(key, slice)
+                    break
+                }
             }
         }
 
@@ -204,7 +252,7 @@ class PieChartView : View {
         selectedSlice = slice
 
         calculateChartRotation(slice)
-        animationIncrement = (chartRotation - animatedRotation) / ANIMATION_DURATION
+        animationIncrement = (chartRotation - animatedRotation) / SELECT_ANIMATION_DURATION
 
         startAnimation()
     }
@@ -226,7 +274,7 @@ class PieChartView : View {
 
         animationStartRotation = chartRotation;
         chartRotation = 0F
-        animationIncrement = (chartRotation - animatedRotation) / ANIMATION_DURATION
+        animationIncrement = (chartRotation - animatedRotation) / SELECT_ANIMATION_DURATION
 
         startAnimation()
     }
