@@ -40,8 +40,11 @@ class PieChartView : View {
     private var chartRotation = 0F;
 
     private lateinit var rect: RectF;
-    private lateinit var piePaint: Paint
     private lateinit var center: Point
+
+    private lateinit var piePaint: Paint
+    private lateinit var backgroundPaint: Paint
+    private lateinit var separatorPaint: Paint
 
     private var animStartTime = 0L
     private var animatedRotation = 0F
@@ -73,9 +76,17 @@ class PieChartView : View {
     }
 
     private fun init() {
-        piePaint = Paint(Paint.ANTI_ALIAS_FLAG);
-        piePaint.style = Paint.Style.FILL;
-        isDrawingCacheEnabled = true
+        piePaint = Paint(Paint.ANTI_ALIAS_FLAG)
+        piePaint.style = Paint.Style.FILL
+
+        backgroundPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+        backgroundPaint.style = Paint.Style.FILL
+        backgroundPaint.color = Color.WHITE
+
+        separatorPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+        separatorPaint.style = Paint.Style.STROKE
+        separatorPaint.color = Color.WHITE
+        separatorPaint.strokeWidth = 10F
     }
 
     fun addDataEntry(key: String, value: Double) {
@@ -138,6 +149,7 @@ class PieChartView : View {
 
         drawSlices(canvas)
         drawCenterSpace(canvas)
+        drawSeparators(canvas)
     }
 
     private fun startInitialAnimation() {
@@ -199,8 +211,14 @@ class PieChartView : View {
     }
 
     private fun drawCenterSpace(canvas: Canvas) {
-        piePaint.color = Color.rgb(255, 255, 255)
-        canvas.drawCircle(rect.width() / 2, rect.height() / 2, 150F, piePaint)
+        canvas.drawCircle(rect.width() / 2, rect.height() / 2, 150F, backgroundPaint)
+    }
+
+    private fun drawSeparators(canvas: Canvas) {
+        for ((_, value) in pieSlices) {
+            val startAngle = (value.startAngle + animatedRotation) % 360
+            canvas.drawArc(rect, startAngle, value.sweepAngle, true, separatorPaint)
+        }
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
