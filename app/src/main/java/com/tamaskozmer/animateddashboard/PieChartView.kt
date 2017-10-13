@@ -58,6 +58,9 @@ class PieChartView : View {
     private var initialAnimationStarted = false
     private var initialAnimationFinished = false
 
+    var sliceSelectedListener: ((String) -> Unit)? = null
+    var sliceDeselectedListener: (() -> Unit)? = null
+
     constructor(context: Context) : super(context) {
         init()
     }
@@ -269,6 +272,8 @@ class PieChartView : View {
     private fun pieSliceClicked(name: String, slice: PieSlice) {
         Log.d(TAG, "slice: $name")
 
+        sliceSelectedListener?.invoke(name)
+
         selectedSlice = slice
 
         calculateChartRotation(slice)
@@ -291,6 +296,7 @@ class PieChartView : View {
 
     fun deselectSlice() {
         selectedSlice = null
+        sliceDeselectedListener?.invoke()
 
         animationStartRotation = chartRotation;
         chartRotation = 0F
