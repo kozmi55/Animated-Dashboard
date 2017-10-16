@@ -272,9 +272,9 @@ class PieChartView : View {
     private fun pieSliceClicked(name: String, slice: PieSlice) {
         Log.d(TAG, "slice: $name")
 
-        sliceSelectedListener?.invoke(name)
-
         selectedSlice = slice
+
+        sliceSelectedListener?.invoke(name)
 
         calculateChartRotation(slice)
         animationIncrement = (chartRotation - animatedRotation) / SELECT_ANIMATION_DURATION
@@ -291,6 +291,13 @@ class PieChartView : View {
 
         if (chartRotation < 0) {
             chartRotation += 360
+        }
+    }
+
+    fun selectSlice(key: String) {
+        val slice = pieSlices[key]
+        if (slice != null && slice != selectedSlice) {
+            pieSliceClicked(key, slice)
         }
     }
 

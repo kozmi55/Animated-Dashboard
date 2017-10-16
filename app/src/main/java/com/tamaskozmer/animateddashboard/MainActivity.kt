@@ -5,15 +5,18 @@ import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.os.Bundle
 import android.support.design.widget.BottomSheetBehavior
+import android.support.v4.view.ViewPager
 import android.support.v7.app.AppCompatActivity
 import android.widget.LinearLayout
-import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.bottom_sheet.*
 
 class MainActivity : AppCompatActivity() {
 
+    private val dataProvider = DataProvider()
+
     private lateinit var bottomSheetBehavior: BottomSheetBehavior<LinearLayout>
+    private lateinit var data: List<Category>
 
     private var sliceSelected = false
 
@@ -21,17 +24,15 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        initData()
+        initViewPager()
+
         bottomSheetBehavior = BottomSheetBehavior.from(bottom_sheet)
         bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
 
-        pieChartView.addDataEntry("Nougat", 15.0)
-        pieChartView.addDataEntry("Marshmallow", 33.0)
-        pieChartView.addDataEntry("Lollipop", 29.0)
-        pieChartView.addDataEntry("Kitkat", 15.0)
-        pieChartView.addDataEntry("Other", 8.0)
-
         pieChartView.sliceSelectedListener = { key ->
-            Toast.makeText(this, key, Toast.LENGTH_SHORT).show()
+            selectViewPagerPage(key)
+
             if (!sliceSelected) {
                 animateSelect()
             }
@@ -45,6 +46,36 @@ class MainActivity : AppCompatActivity() {
             scaleAnimation.playTogether(createTranslateAnimation(pieChartView.translationY, pieChartView.translationY + 500))
             scaleAnimation.start()
         }
+    }
+
+    private fun initViewPager() {
+        viewPager.adapter = CategoriesPagerAdapter(supportFragmentManager, data)
+        viewPager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
+            override fun onPageScrollStateChanged(state: Int) {}
+
+            override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
+                // TODO Smooth animation when scrolling
+            }
+
+            override fun onPageSelected(position: Int) {
+                val name = data[position].name
+                pieChartView.selectSlice(name)
+            }
+
+        })
+    }
+
+    private fun initData() {
+        data = dataProvider.getData()
+
+        for ((name, items) in data) {
+            pieChartView.addDataEntry(name, items.sumBy { it.price }.toDouble())
+        }
+    }
+
+    private fun selectViewPagerPage(key: String) {
+        val position = data.indexOfFirst { it.name == key }
+        viewPager.setCurrentItem(position, true)
     }
 
     private fun animateSelect() {
