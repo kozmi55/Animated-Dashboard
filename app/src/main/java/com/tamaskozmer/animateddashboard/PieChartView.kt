@@ -92,11 +92,11 @@ class PieChartView : View {
         separatorPaint.strokeWidth = 10F
     }
 
-    fun addDataEntry(key: String, value: Double) {
+    fun addDataEntry(key: String, value: Double, color: Int) {
         data[key] = value
         dataValueSum += value
 
-        pieSlices[key] = PieSlice(randomColor())
+        pieSlices[key] = PieSlice(color)
         calculateAngles()
     }
 

@@ -33,6 +33,7 @@ class ListFragment : Fragment() {
         val category = arguments?.get("category") as Category?
 
         category?.let {
+            recyclerView.setBackgroundColor(category.color)
             recyclerView.adapter = ExpensesAdapter(category.items)
             recyclerView.layoutManager = LinearLayoutManager(activity)
         }
