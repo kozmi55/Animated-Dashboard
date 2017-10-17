@@ -28,23 +28,7 @@ class MainActivity : AppCompatActivity() {
         initData()
         initViewPager()
         initBottomSheet()
-
-        pieChartView.sliceSelectedListener = { key ->
-            selectViewPagerPage(key)
-
-            if (!sliceSelected) {
-                animateSelect()
-            }
-            sliceSelected = true
-        }
-
-        pieChartView.sliceDeselectedListener = {
-            sliceSelected = false
-            hideBottomSheet()
-            val scaleAnimation = createScaleAnimation(0.5f, 1.0f)
-            scaleAnimation.playTogether(createTranslateAnimation(pieChartView.translationY, pieChartView.translationY + 500))
-            scaleAnimation.start()
-        }
+        initPieChartListeners()
     }
 
     private fun initData() {
@@ -77,7 +61,9 @@ class MainActivity : AppCompatActivity() {
         bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
 
         bottomSheetBehavior.setBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
-            override fun onSlide(bottomSheet: View, slideOffset: Float) {}
+            override fun onSlide(bottomSheet: View, slideOffset: Float) {
+                handleSlideOffset(slideOffset)
+            }
 
             override fun onStateChanged(bottomSheet: View, newState: Int) {
                 if (newState == BottomSheetBehavior.STATE_HIDDEN) {
@@ -85,6 +71,35 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         })
+    }
+
+    private fun handleSlideOffset(slideOffset: Float) {
+        if (slideOffset > 0) {
+            pieChartView.alpha = 1 - slideOffset * 2
+            val scale = (0.5 - slideOffset).toFloat()
+            pieChartView.scaleX = scale
+            pieChartView.scaleY = scale
+        }
+    }
+
+
+    private fun initPieChartListeners() {
+        pieChartView.sliceSelectedListener = { key ->
+            selectViewPagerPage(key)
+
+            if (!sliceSelected) {
+                animateSelect()
+            }
+            sliceSelected = true
+        }
+
+        pieChartView.sliceDeselectedListener = {
+            sliceSelected = false
+            hideBottomSheet()
+            val scaleAnimation = createScaleAnimation(0.5f, 1.0f)
+            scaleAnimation.playTogether(createTranslateAnimation(pieChartView.translationY, pieChartView.translationY + 500))
+            scaleAnimation.start()
+        }
     }
 
     private fun selectViewPagerPage(key: String) {
