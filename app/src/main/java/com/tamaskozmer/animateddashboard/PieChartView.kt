@@ -302,6 +302,10 @@ class PieChartView : View {
     }
 
     fun deselectSlice() {
+        if (selectedSlice == null) {
+            return
+        }
+
         selectedSlice = null
         sliceDeselectedListener?.invoke()
 

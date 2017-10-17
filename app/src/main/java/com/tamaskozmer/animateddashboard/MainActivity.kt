@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.support.design.widget.BottomSheetBehavior
 import android.support.v4.view.ViewPager
 import android.support.v7.app.AppCompatActivity
+import android.view.View
 import android.widget.LinearLayout
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.bottom_sheet.*
@@ -26,9 +27,7 @@ class MainActivity : AppCompatActivity() {
 
         initData()
         initViewPager()
-
-        bottomSheetBehavior = BottomSheetBehavior.from(bottom_sheet)
-        bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
+        initBottomSheet()
 
         pieChartView.sliceSelectedListener = { key ->
             selectViewPagerPage(key)
@@ -45,6 +44,14 @@ class MainActivity : AppCompatActivity() {
             val scaleAnimation = createScaleAnimation(0.5f, 1.0f)
             scaleAnimation.playTogether(createTranslateAnimation(pieChartView.translationY, pieChartView.translationY + 500))
             scaleAnimation.start()
+        }
+    }
+
+    private fun initData() {
+        data = dataProvider.getData()
+
+        for ((name, items, color) in data) {
+            pieChartView.addDataEntry(name, items.sumBy { it.price }.toDouble(), color)
         }
     }
 
@@ -65,12 +72,19 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
-    private fun initData() {
-        data = dataProvider.getData()
+    private fun initBottomSheet() {
+        bottomSheetBehavior = BottomSheetBehavior.from(bottom_sheet)
+        bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
 
-        for ((name, items, color) in data) {
-            pieChartView.addDataEntry(name, items.sumBy { it.price }.toDouble(), color)
-        }
+        bottomSheetBehavior.setBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
+            override fun onSlide(bottomSheet: View, slideOffset: Float) {}
+
+            override fun onStateChanged(bottomSheet: View, newState: Int) {
+                if (newState == BottomSheetBehavior.STATE_HIDDEN) {
+                    pieChartView.deselectSlice()
+                }
+            }
+        })
     }
 
     private fun selectViewPagerPage(key: String) {
