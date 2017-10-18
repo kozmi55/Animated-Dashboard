@@ -16,6 +16,15 @@ class DataProvider {
                 ExpenseItem("Groceries", 15000),
                 ExpenseItem("Lunch", 1500),
                 ExpenseItem("Dinner", 1000),
+                ExpenseItem("Dinner", 1000),
+                ExpenseItem("Dinner", 1000),
+                ExpenseItem("Dinner", 1000),
+                ExpenseItem("Dinner", 1000),
+                ExpenseItem("Dinner", 1000),
+                ExpenseItem("Dinner", 1000),
+                ExpenseItem("Dinner", 1000),
+                ExpenseItem("Dinner", 1000),
+                ExpenseItem("Dinner", 1000),
                 ExpenseItem("Groceries", 3000)), Color.BLUE)
 
         val entertainment = Category("Entertainment", listOf(

@@ -9,6 +9,8 @@ import android.support.v4.view.ViewPager
 import android.support.v7.app.AppCompatActivity
 import android.view.View
 import android.widget.LinearLayout
+import com.tamaskozmer.animateddashboard.bottomsheet.BottomSheetUtils
+import com.tamaskozmer.animateddashboard.bottomsheet.ViewPagerBottomSheetBehavior
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.bottom_sheet.*
 
@@ -16,7 +18,7 @@ class MainActivity : AppCompatActivity() {
 
     private val dataProvider = DataProvider()
 
-    private lateinit var bottomSheetBehavior: BottomSheetBehavior<LinearLayout>
+    private lateinit var bottomSheetBehavior: ViewPagerBottomSheetBehavior<LinearLayout>
     private lateinit var data: List<Category>
 
     private var sliceSelected = false
@@ -57,10 +59,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initBottomSheet() {
-        bottomSheetBehavior = BottomSheetBehavior.from(bottom_sheet)
-        bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
+        bottomSheetBehavior = ViewPagerBottomSheetBehavior.from(bottom_sheet)
+        BottomSheetUtils.setupViewPager(viewPager)
 
-        bottomSheetBehavior.setBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
+        bottomSheetBehavior.state = ViewPagerBottomSheetBehavior.STATE_HIDDEN
+
+
+        bottomSheetBehavior.setBottomSheetCallback(object : ViewPagerBottomSheetBehavior.BottomSheetCallback() {
             override fun onSlide(bottomSheet: View, slideOffset: Float) {
                 handleSlideOffset(slideOffset)
             }
@@ -125,11 +130,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showBottomSheet() {
-        bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+        bottomSheetBehavior.state = ViewPagerBottomSheetBehavior.STATE_COLLAPSED
     }
 
     private fun hideBottomSheet() {
-        bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
+        bottomSheetBehavior.state = ViewPagerBottomSheetBehavior.STATE_HIDDEN
     }
 
     private fun createScaleAnimation(start: Float, end: Float): AnimatorSet {
@@ -153,7 +158,7 @@ class MainActivity : AppCompatActivity() {
         val state = bottomSheetBehavior.state
         when {
             state == BottomSheetBehavior.STATE_EXPANDED || state == BottomSheetBehavior.STATE_DRAGGING || state == BottomSheetBehavior.STATE_SETTLING ->
-                bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+                bottomSheetBehavior.state = ViewPagerBottomSheetBehavior.STATE_COLLAPSED
             pieChartView.isSliceSelected() -> pieChartView.deselectSlice()
             else -> super.onBackPressed()
         }
