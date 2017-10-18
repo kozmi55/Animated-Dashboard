@@ -3,4 +3,15 @@
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
+
+    <color name="housing">#26caa2</color>
+    <color name="food">#3ed9fa</color>
+    <color name="entertainment">#f255b3</color>
+    <color name="sport">#ffcc75</color>
+
+    <color name="outerBackground">#242f59</color>
+    <color name="innerBackground">#17224e</color>
+
+    <color name="semiTransparent">#7fffffff</color>
+
 </resources>

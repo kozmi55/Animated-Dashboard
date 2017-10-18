@@ -6,11 +6,11 @@ import android.graphics.*
 import android.os.Build
 import android.os.Handler
 import android.os.SystemClock
+import android.support.v4.content.ContextCompat
 import android.util.AttributeSet
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
-import java.util.*
 
 
 /**
@@ -23,6 +23,9 @@ class PieChartView : View {
 
     private val SELECT_ANIMATION_DURATION = 300L
 
+    private val BORDER_SIZE = 20F
+    private val CENTER_RADIUS = 150F
+
     private val TAG = "PieChartView"
 
     private val data = mutableMapOf<String, Double>()
@@ -33,13 +36,15 @@ class PieChartView : View {
             invalidate();
             animationHandler.postDelayed(this, 16)
         }
-
     }
 
-    private var dataValueSum = 0.0;
-    private var chartRotation = 0F;
+    private val backgroundColor = ContextCompat.getColor(context, R.color.outerBackground)
 
-    private lateinit var rect: RectF;
+    private var dataValueSum = 0.0
+    private var chartRotation = 0F
+
+    private lateinit var rect: RectF
+    private lateinit var slicesRect: RectF
     private lateinit var center: Point
 
     private lateinit var piePaint: Paint
@@ -84,12 +89,12 @@ class PieChartView : View {
 
         backgroundPaint = Paint(Paint.ANTI_ALIAS_FLAG)
         backgroundPaint.style = Paint.Style.FILL
-        backgroundPaint.color = Color.WHITE
+        backgroundPaint.color = ContextCompat.getColor(context, R.color.innerBackground)
 
         separatorPaint = Paint(Paint.ANTI_ALIAS_FLAG)
         separatorPaint.style = Paint.Style.STROKE
-        separatorPaint.color = Color.WHITE
-        separatorPaint.strokeWidth = 10F
+        separatorPaint.color = ContextCompat.getColor(context, R.color.innerBackground)
+        separatorPaint.strokeWidth = BORDER_SIZE
     }
 
     fun addDataEntry(key: String, value: Double, color: Int) {
@@ -98,14 +103,6 @@ class PieChartView : View {
 
         pieSlices[key] = PieSlice(color)
         calculateAngles()
-    }
-
-    private fun randomColor(): Int {
-        val random = Random()
-        val r = random.nextInt(255)
-        val g = random.nextInt(255)
-        val b = random.nextInt(255)
-        return Color.rgb(r, g, b)
     }
 
     fun removeDataEntry(key: String) {
@@ -134,8 +131,8 @@ class PieChartView : View {
     override fun onSizeChanged(width: Int, height: Int, oldWidth: Int, oldHeight: Int) {
         super.onSizeChanged(width, height, oldWidth, oldHeight)
         rect = RectF(0F, 0F, width.toFloat(), height.toFloat())
+        slicesRect = RectF(BORDER_SIZE, BORDER_SIZE, width - BORDER_SIZE, height - BORDER_SIZE)
         center = Point(width / 2, height / 2)
-        Log.d(TAG, "centerX: ${center.x}, centerY: ${center.y}")
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -145,7 +142,8 @@ class PieChartView : View {
             startInitialAnimation()
         }
 
-        canvas.drawRGB(255, 255, 255)
+        canvas.drawColor(backgroundColor)
+        canvas.drawCircle((width / 2).toFloat(), (height / 2).toFloat(), (width / 2).toFloat(), backgroundPaint)
 
         handleInitAnimation()
         handleRotationAnimation()
@@ -190,7 +188,7 @@ class PieChartView : View {
 
     private fun drawSlices(canvas: Canvas) {
         for ((_, value) in pieSlices) {
-            var alpha = 20
+            var alpha = 100
             if (selectedSlice == null || value == selectedSlice) {
                 alpha = 255
             }
@@ -209,18 +207,18 @@ class PieChartView : View {
                 }
             }
 
-            canvas.drawArc(rect, startAngle, sweepAngle, true, piePaint)
+            canvas.drawArc(slicesRect, startAngle, sweepAngle, true, piePaint)
         }
     }
 
     private fun drawCenterSpace(canvas: Canvas) {
-        canvas.drawCircle(rect.width() / 2, rect.height() / 2, 150F, backgroundPaint)
+        canvas.drawCircle(rect.width() / 2, rect.height() / 2, CENTER_RADIUS, backgroundPaint)
     }
 
     private fun drawSeparators(canvas: Canvas) {
         for ((_, value) in pieSlices) {
             val startAngle = (value.startAngle + animatedRotation) % 360
-            canvas.drawArc(rect, startAngle, value.sweepAngle, true, separatorPaint)
+            canvas.drawArc(slicesRect, startAngle, value.sweepAngle, true, separatorPaint)
         }
     }
 
@@ -245,7 +243,7 @@ class PieChartView : View {
 
         val radius = Math.sqrt((realX * realX + realY * realY).toDouble())
 
-        if (radius < 150 || radius > rect.width() / 2) {
+        if (radius < CENTER_RADIUS || radius > rect.width() / 2) {
             return false
         }
 

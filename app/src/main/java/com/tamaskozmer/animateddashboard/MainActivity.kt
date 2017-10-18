@@ -16,7 +16,7 @@ import kotlinx.android.synthetic.main.bottom_sheet.*
 
 class MainActivity : AppCompatActivity() {
 
-    private val dataProvider = DataProvider()
+    private val dataProvider = DataProvider(this)
 
     private lateinit var bottomSheetBehavior: ViewPagerBottomSheetBehavior<LinearLayout>
     private lateinit var data: List<Category>
