@@ -36,7 +36,7 @@ class MainActivity : AppCompatActivity() {
     private fun initData() {
         data = dataProvider.getData()
 
-        for ((name, items, color) in data) {
+        for ((name, items, color) in data.reversed()) {
             pieChartView.addDataEntry(name, items.sumBy { it.price }.toDouble(), color)
         }
     }
@@ -155,10 +155,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onBackPressed() {
-        val state = bottomSheetBehavior.state
         when {
-            state == BottomSheetBehavior.STATE_EXPANDED || state == BottomSheetBehavior.STATE_DRAGGING || state == BottomSheetBehavior.STATE_SETTLING ->
-                bottomSheetBehavior.state = ViewPagerBottomSheetBehavior.STATE_COLLAPSED
+            bottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED -> bottomSheetBehavior.state = ViewPagerBottomSheetBehavior.STATE_COLLAPSED
             pieChartView.isSliceSelected() -> pieChartView.deselectSlice()
             else -> super.onBackPressed()
         }
