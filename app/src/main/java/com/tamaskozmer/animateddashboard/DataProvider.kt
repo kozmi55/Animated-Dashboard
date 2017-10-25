@@ -10,7 +10,7 @@ class DataProvider(val context: Context) {
 
     fun getData(): List<Category> {
         val housing = Category("Housing", listOf(
-                ExpenseItem("Rent", 60000),
+                ExpenseItem("Rent", 40000),
                 ExpenseItem("Utilities", 10000)), ContextCompat.getColor(context, R.color.housing))
 
         val food = Category("Food", listOf(

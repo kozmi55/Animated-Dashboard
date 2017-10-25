@@ -19,8 +19,6 @@ import android.view.View
 class PieChartView : View {
 
     private val INITIAL_ANIMATION_DURATION = 750L
-    private val INIT_ANIMATION_INCREMENT = 360F / INITIAL_ANIMATION_DURATION
-
     private val SELECT_ANIMATION_DURATION = 300L
 
     private val BORDER_SIZE = 20F
@@ -30,13 +28,6 @@ class PieChartView : View {
 
     private val data = mutableMapOf<String, Double>()
     private val pieSlices = mutableMapOf<String, PieSlice>()
-    private val animationHandler = Handler()
-    private val animationRunnable = object : Runnable {
-        override fun run() {
-            invalidate();
-            animationHandler.postDelayed(this, 16)
-        }
-    }
 
     private val backgroundColor = ContextCompat.getColor(context, R.color.outerBackground)
 
@@ -51,17 +42,11 @@ class PieChartView : View {
     private lateinit var backgroundPaint: Paint
     private lateinit var separatorPaint: Paint
 
-    private var animStartTime = 0L
-    private var animatedRotation = 0F
-    private var animationIncrement = 0F
-    private var animationStartRotation = 0F
+    private var rotationAnimationHelper: AnimationHelper? = null
 
     private var selectedSlice: PieSlice? = null
 
-    private var initialAnimationStartTime = 0L
-    private var initialAnimationAnimatedValue = 0F
-    private var initialAnimationStarted = false
-    private var initialAnimationFinished = false
+    private val initialAnimationHelper: AnimationHelper = AnimationHelper(this, INITIAL_ANIMATION_DURATION, 0F, 360F)
 
     var sliceSelectedListener: ((String) -> Unit)? = null
     var sliceDeselectedListener: (() -> Unit)? = null
@@ -138,52 +123,19 @@ class PieChartView : View {
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
-        if (!initialAnimationStarted) {
-            startInitialAnimation()
+        if (initialAnimationHelper.state == AnimationHelper.State.NOT_STARTED) {
+            initialAnimationHelper.startAnimation()
         }
 
         canvas.drawColor(backgroundColor)
         canvas.drawCircle((width / 2).toFloat(), (height / 2).toFloat(), (width / 2).toFloat(), backgroundPaint)
 
-        handleInitAnimation()
-        handleRotationAnimation()
+        rotationAnimationHelper?.handleAnimation()
+        initialAnimationHelper.handleAnimation()
 
         drawSlices(canvas)
         drawCenterSpace(canvas)
         drawSeparators(canvas)
-    }
-
-    private fun startInitialAnimation() {
-        initialAnimationStarted = true
-        initialAnimationStartTime = SystemClock.uptimeMillis()
-        animationHandler.removeCallbacks(animationRunnable)
-        animationHandler.post(animationRunnable)
-    }
-
-    private fun handleInitAnimation() {
-        var delta = SystemClock.uptimeMillis() - initialAnimationStartTime
-        if (delta >= INITIAL_ANIMATION_DURATION) {
-            delta = INITIAL_ANIMATION_DURATION;
-            initialAnimationAnimatedValue = 360F
-            initialAnimationFinished = true
-        }
-
-        initialAnimationAnimatedValue = (delta * INIT_ANIMATION_INCREMENT)
-        if (initialAnimationAnimatedValue == 360F) {
-            stopAnimation()
-        }
-    }
-
-    private fun handleRotationAnimation() {
-        var delta = SystemClock.uptimeMillis() - animStartTime
-        if (delta >= SELECT_ANIMATION_DURATION) {
-            delta = SELECT_ANIMATION_DURATION;
-        }
-
-        animatedRotation = animationStartRotation + delta * animationIncrement
-        if (animatedRotation == chartRotation) {
-            stopAnimation()
-        }
     }
 
     private fun drawSlices(canvas: Canvas) {
@@ -196,14 +148,16 @@ class PieChartView : View {
             val color = value.color
             piePaint.color = Color.argb(alpha, Color.red(color), Color.green(color), Color.blue(color))
 
+            val animatedRotation = rotationAnimationHelper?.animatedValue ?: 0F
+
             val startAngle = (value.startAngle + animatedRotation) % 360
             var sweepAngle = value.sweepAngle;
 
-            if (!initialAnimationFinished) {
-                sweepAngle = if (initialAnimationAnimatedValue < startAngle) {
+            if (initialAnimationHelper.state != AnimationHelper.State.FINISHED) {
+                sweepAngle = if (initialAnimationHelper.animatedValue < startAngle) {
                     0F
                 } else {
-                    minOf(initialAnimationAnimatedValue - startAngle, value.sweepAngle)
+                    minOf(initialAnimationHelper.animatedValue - startAngle, value.sweepAngle)
                 }
             }
 
@@ -216,6 +170,8 @@ class PieChartView : View {
     }
 
     private fun drawSeparators(canvas: Canvas) {
+        val animatedRotation = rotationAnimationHelper?.animatedValue ?: 0F
+
         for ((_, value) in pieSlices) {
             val startAngle = (value.startAngle + animatedRotation) % 360
             canvas.drawArc(slicesRect, startAngle, value.sweepAngle, true, separatorPaint)
@@ -225,7 +181,7 @@ class PieChartView : View {
     override fun onTouchEvent(event: MotionEvent): Boolean {
         Log.d(TAG, "x: ${event.x}, y: ${event.y}")
 
-        if (initialAnimationFinished) {
+        if (initialAnimationHelper.state == AnimationHelper.State.FINISHED) {
             for ((key, slice) in pieSlices) {
                 if (sliceContainsPoint(slice, event.x, event.y)) {
                     pieSliceClicked(key, slice)
@@ -275,21 +231,21 @@ class PieChartView : View {
         sliceSelectedListener?.invoke(name)
 
         calculateChartRotation(slice)
-        animationIncrement = (chartRotation - animatedRotation) / SELECT_ANIMATION_DURATION
-
-        startAnimation()
     }
 
     private fun calculateChartRotation(selectedSlice: PieSlice) {
         val rotatingSliceOffset = 90 - selectedSlice.startAngle
 
         val newStartAngle = selectedSlice.startAngle + rotatingSliceOffset - selectedSlice.sweepAngle / 2
-        animationStartRotation = chartRotation;
+        val startRotation = chartRotation;
         chartRotation = newStartAngle - selectedSlice.startAngle
 
         if (chartRotation < 0) {
             chartRotation += 360
         }
+
+        rotationAnimationHelper = AnimationHelper(this, 300, startRotation, chartRotation)
+        rotationAnimationHelper?.startAnimation()
     }
 
     fun selectSlice(key: String) {
@@ -307,26 +263,14 @@ class PieChartView : View {
         selectedSlice = null
         sliceDeselectedListener?.invoke()
 
-        animationStartRotation = chartRotation;
+        val startRotation = chartRotation;
         chartRotation = 0F
-        animationIncrement = (chartRotation - animatedRotation) / SELECT_ANIMATION_DURATION
 
-        startAnimation()
+        rotationAnimationHelper = AnimationHelper(this, SELECT_ANIMATION_DURATION, startRotation, chartRotation)
+        rotationAnimationHelper?.startAnimation()
     }
 
     fun isSliceSelected(): Boolean {
         return chartRotation != 0F
-    }
-
-    private fun startAnimation() {
-        animStartTime = SystemClock.uptimeMillis()
-        animationHandler.removeCallbacks(animationRunnable)
-        animationHandler.post(animationRunnable)
-    }
-
-    private fun stopAnimation() {
-        animationHandler.removeCallbacks(animationRunnable)
-        animatedRotation = chartRotation
-        invalidate()
     }
 }
