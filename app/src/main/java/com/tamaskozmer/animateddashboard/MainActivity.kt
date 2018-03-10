@@ -11,6 +11,7 @@ import android.view.View
 import android.widget.LinearLayout
 import com.tamaskozmer.animateddashboard.bottomsheet.BottomSheetUtils
 import com.tamaskozmer.animateddashboard.bottomsheet.ViewPagerBottomSheetBehavior
+import com.tobishiba.circularviewpager.library.CircularViewPagerHandler
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.bottom_sheet.*
 
@@ -43,7 +44,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun initViewPager() {
         viewPager.adapter = CategoriesPagerAdapter(supportFragmentManager, data)
-        viewPager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
+
+        val circularViewPagerHandler = CircularViewPagerHandler(viewPager)
+        viewPager.addOnPageChangeListener(circularViewPagerHandler)
+
+        circularViewPagerHandler.setOnPageChangeListener(object : ViewPager.OnPageChangeListener {
             override fun onPageScrollStateChanged(state: Int) {}
 
             override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
@@ -51,10 +56,11 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onPageSelected(position: Int) {
-                val name = data[position].name
-                pieChartView.selectSlice(name)
+                if (position >= 0 && position < data.size) {
+                    val name = data[position].name
+                    pieChartView.selectSlice(name)
+                }
             }
-
         })
     }
 
@@ -109,7 +115,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun selectViewPagerPage(key: String) {
         val position = data.indexOfFirst { it.name == key }
-        viewPager.setCurrentItem(position, true)
+        viewPager.setCurrentItem(position + 1, true)
     }
 
     private fun animateSelect() {

@@ -4,8 +4,6 @@ import android.annotation.TargetApi
 import android.content.Context
 import android.graphics.*
 import android.os.Build
-import android.os.Handler
-import android.os.SystemClock
 import android.support.v4.content.ContextCompat
 import android.util.AttributeSet
 import android.util.Log
