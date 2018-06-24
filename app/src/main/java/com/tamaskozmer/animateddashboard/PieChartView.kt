@@ -10,41 +10,40 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 
+private const val INITIAL_ANIMATION_DURATION = 750L
+private const val SELECT_ANIMATION_DURATION = 300L
+
+private const val BORDER_SIZE = 20F
+private const val CENTER_RADIUS = 150F
+
+private const val TAG = "PieChartView"
 
 /**
  * Created by Tamas_Kozmer on 9/29/2017.
  */
 class PieChartView : View {
 
-    private val INITIAL_ANIMATION_DURATION = 750L
-    private val SELECT_ANIMATION_DURATION = 300L
-
-    private val BORDER_SIZE = 20F
-    private val CENTER_RADIUS = 150F
-
-    private val TAG = "PieChartView"
-
     private val data = mutableMapOf<String, Double>()
     private val pieSlices = mutableMapOf<String, PieSlice>()
 
     private val backgroundColor = ContextCompat.getColor(context, R.color.outerBackground)
+    private val initialAnimationHelper: AnimationHelper = AnimationHelper(this, INITIAL_ANIMATION_DURATION, 0F, 360F)
 
     private var dataValueSum = 0.0
-    private var chartRotation = 0F
 
+    private var chartRotation = 0F
     private lateinit var rect: RectF
     private lateinit var slicesRect: RectF
-    private lateinit var center: Point
 
+    private lateinit var center: Point
     private lateinit var piePaint: Paint
     private lateinit var backgroundPaint: Paint
+
     private lateinit var separatorPaint: Paint
 
     private var rotationAnimationHelper: AnimationHelper? = null
 
     private var selectedSlice: PieSlice? = null
-
-    private val initialAnimationHelper: AnimationHelper = AnimationHelper(this, INITIAL_ANIMATION_DURATION, 0F, 360F)
 
     var sliceSelectedListener: ((String) -> Unit)? = null
     var sliceDeselectedListener: (() -> Unit)? = null

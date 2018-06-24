@@ -14,6 +14,7 @@ class AnimationHelper(
         private val endValue: Float) {
 
     var animatedValue = 0F
+        private set
     var state: State = State.NOT_STARTED
         private set
 
