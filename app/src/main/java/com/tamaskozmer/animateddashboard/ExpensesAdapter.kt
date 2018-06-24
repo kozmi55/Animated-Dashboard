@@ -42,7 +42,7 @@ class ExpensesAdapter(private val category: Category) : RecyclerView.Adapter<Rec
         fun bind(expenseItem: ExpenseItem) {
             with(itemView) {
                 title.text = expenseItem.title
-                price.text = expenseItem.price.toString()
+                price.text = "${expenseItem.price} $"
             }
         }
     }
