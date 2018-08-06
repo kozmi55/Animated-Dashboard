@@ -18,9 +18,8 @@ private const val CENTER_RADIUS = 150F
 
 private const val TAG = "PieChartView"
 
-/**
- * Created by Tamas_Kozmer on 9/29/2017.
- */
+private const val MAX_ANGLE = 360
+
 class PieChartView : View {
 
     private val data = mutableMapOf<String, Double>()
@@ -101,7 +100,7 @@ class PieChartView : View {
         var startAngle = 0F
 
         for ((key, value) in data) {
-            val sweepAngle = (value / dataValueSum * 360).toFloat()
+            val sweepAngle = (value / dataValueSum * MAX_ANGLE).toFloat()
 
             pieSlices[key]?.startAngle = startAngle
             pieSlices[key]?.sweepAngle = sweepAngle
@@ -147,7 +146,7 @@ class PieChartView : View {
 
             val animatedRotation = rotationAnimationHelper?.animatedValue ?: 0F
 
-            val startAngle = (value.startAngle + animatedRotation) % 360
+            val startAngle = (value.startAngle + animatedRotation) % MAX_ANGLE
             var sweepAngle = value.sweepAngle;
 
             if (initialAnimationHelper.state != AnimationHelper.State.FINISHED) {
@@ -170,7 +169,7 @@ class PieChartView : View {
         val animatedRotation = rotationAnimationHelper?.animatedValue ?: 0F
 
         for ((_, value) in pieSlices) {
-            val startAngle = (value.startAngle + animatedRotation) % 360
+            val startAngle = (value.startAngle + animatedRotation) % MAX_ANGLE
             canvas.drawArc(slicesRect, startAngle, value.sweepAngle, true, separatorPaint)
         }
     }
@@ -202,13 +201,13 @@ class PieChartView : View {
 
         val angle = Math.toDegrees(Math.atan2(realY.toDouble(), realX.toDouble()))
 
-        val realAngle = if (angle >= 0) angle else 360 + angle
+        val realAngle = if (angle >= 0) angle else MAX_ANGLE + angle
 
         val startAngle = slice.startAngle + chartRotation
         val endAngle = startAngle + slice.sweepAngle
 
-        if (endAngle > 360) {
-            if (realAngle > startAngle || realAngle < endAngle - 360) {
+        if (endAngle > MAX_ANGLE) {
+            if (realAngle > startAngle || realAngle < endAngle - MAX_ANGLE) {
                 return true
             }
         } else {
@@ -238,10 +237,10 @@ class PieChartView : View {
         chartRotation = newStartAngle - selectedSlice.startAngle
 
         if (chartRotation < 0) {
-            chartRotation += 360
+            chartRotation += MAX_ANGLE
         }
 
-        rotationAnimationHelper = AnimationHelper(this, 300, startRotation, chartRotation)
+        rotationAnimationHelper = AnimationHelper(this, SELECT_ANIMATION_DURATION, startRotation, chartRotation, shouldAnimateBackwards(startRotation, chartRotation))
         rotationAnimationHelper?.startAnimation()
     }
 
@@ -263,8 +262,24 @@ class PieChartView : View {
         val startRotation = chartRotation;
         chartRotation = 0F
 
-        rotationAnimationHelper = AnimationHelper(this, SELECT_ANIMATION_DURATION, startRotation, chartRotation)
+        rotationAnimationHelper = AnimationHelper(this, SELECT_ANIMATION_DURATION, startRotation, chartRotation, shouldAnimateBackwards(startRotation, chartRotation))
         rotationAnimationHelper?.startAnimation()
+    }
+
+    private fun shouldAnimateBackwards(startRotation: Float, endRotation: Float): Boolean {
+        val forwardDistance = if (endRotation - startRotation < 0) {
+            endRotation - startRotation + MAX_ANGLE
+        } else {
+            endRotation - startRotation
+        }
+
+        val backwardsDistance = if (startRotation - chartRotation < 0) {
+            startRotation - endRotation + MAX_ANGLE
+        } else {
+            startRotation - endRotation
+        }
+
+        return backwardsDistance < forwardDistance
     }
 
     fun isSliceSelected(): Boolean {

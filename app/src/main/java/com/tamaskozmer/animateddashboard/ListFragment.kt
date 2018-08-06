@@ -8,9 +8,6 @@ import android.view.View
 import android.view.ViewGroup
 import kotlinx.android.synthetic.main.fragment_list.*
 
-/**
- * Created by Tamas_Kozmer on 10/13/2017.
- */
 class ListFragment : Fragment() {
 
     companion object {

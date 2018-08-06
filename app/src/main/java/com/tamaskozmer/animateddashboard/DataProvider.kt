@@ -3,9 +3,6 @@ package com.tamaskozmer.animateddashboard
 import android.content.Context
 import android.support.v4.content.ContextCompat
 
-/**
- * Created by Tamas_Kozmer on 10/13/2017.
- */
 class DataProvider(val context: Context) {
 
     fun getData(): List<Category> {

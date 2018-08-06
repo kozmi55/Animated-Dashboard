@@ -7,10 +7,6 @@ import android.view.ViewGroup
 import kotlinx.android.synthetic.main.expense_item.view.*
 import kotlinx.android.synthetic.main.header_item.view.*
 
-/**
- * Created by Tamas_Kozmer on 10/13/2017.
- */
-
 private const val VIEW_TYPE_HEADER = 0
 private const val VIEW_TYPE_LIST_ITEM = 1
 

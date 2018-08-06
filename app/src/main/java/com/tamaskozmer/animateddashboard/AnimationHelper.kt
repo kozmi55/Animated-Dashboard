@@ -4,14 +4,14 @@ import android.os.Handler
 import android.os.SystemClock
 import android.view.View
 
-/**
- * Created by Tamas_Kozmer on 10/24/2017.
- */
+private const val MAX_VALUE = 360F
+
 class AnimationHelper(
         private val view: View,
         private val duration: Long,
         private val startValue: Float,
-        private val endValue: Float) {
+        private val endValue: Float,
+        reversed: Boolean = false) {
 
     var animatedValue = 0F
         private set
@@ -25,7 +25,22 @@ class AnimationHelper(
             animationHandler.postDelayed(this, 16)
         }
     }
-    private val increment = (endValue - startValue) / duration
+
+    private val increment = if (reversed) {
+        val diff = if (startValue - endValue > 0) {
+            startValue - endValue
+        } else {
+            startValue - endValue + MAX_VALUE
+        }
+        -diff / duration
+    } else {
+        val diff = if (endValue - startValue > 0) {
+            endValue - startValue
+        } else {
+            endValue - startValue + MAX_VALUE
+        }
+        diff / duration
+    }
 
     private var animationStartTime = 0L
 
@@ -43,6 +58,9 @@ class AnimationHelper(
         }
 
         animatedValue = startValue + delta * increment
+        if (animatedValue < 0) {
+            animatedValue += MAX_VALUE
+        }
         if (delta >= duration) {
             stopAnimation()
         }
