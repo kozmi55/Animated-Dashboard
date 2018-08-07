@@ -12,11 +12,11 @@ private const val VIEW_TYPE_LIST_ITEM = 1
 
 class ExpensesAdapter(private val category: Category) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    override fun getItemCount() = category.items.size
+    override fun getItemCount() = category.items.size + 1 // Add 1 for the header
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         if (holder is ExpensesViewHolder) {
-            holder.bind(category.items[position])
+            holder.bind(category.items[position - 1])
         } else if (holder is HeaderViewHolder){
             holder.bind(category)
         }

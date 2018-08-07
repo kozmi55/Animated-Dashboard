@@ -35,4 +35,8 @@ class ListFragment : Fragment() {
             recyclerView.layoutManager = LinearLayoutManager(activity)
         }
     }
+
+    fun scrollToTop() {
+        recyclerView.smoothScrollToPosition(0)
+    }
 }

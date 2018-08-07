@@ -15,12 +15,15 @@ import com.tobishiba.circularviewpager.library.CircularViewPagerHandler
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.bottom_sheet.*
 
+private const val ANIMATION_DURATION = 300L
+
 class MainActivity : AppCompatActivity() {
 
     private val dataProvider = DataProvider(this)
 
     private lateinit var bottomSheetBehavior: ViewPagerBottomSheetBehavior<LinearLayout>
     private lateinit var data: List<Category>
+    private lateinit var adapter: CategoriesPagerAdapter
 
     private var sliceSelected = false
 
@@ -43,7 +46,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initViewPager() {
-        viewPager.adapter = CategoriesPagerAdapter(supportFragmentManager, data)
+        adapter = CategoriesPagerAdapter(supportFragmentManager, data)
+        viewPager.adapter = adapter
 
         val circularViewPagerHandler = CircularViewPagerHandler(viewPager)
         viewPager.addOnPageChangeListener(circularViewPagerHandler)
@@ -59,6 +63,10 @@ class MainActivity : AppCompatActivity() {
                 if (position >= 0 && position < data.size) {
                     val name = data[position].name
                     pieChartView.selectSlice(name)
+
+                    if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_COLLAPSED) {
+                        adapter.getFragmentAtPosition(viewPager.currentItem)?.scrollToTop()
+                    }
                 }
             }
         })
@@ -145,10 +153,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun createScaleAnimation(start: Float, end: Float): AnimatorSet {
         val scaleX = ObjectAnimator.ofFloat(pieChartView, "scaleX", start, end)
-                .setDuration(300)
+                .setDuration(ANIMATION_DURATION)
 
         val scaleY = ObjectAnimator.ofFloat(pieChartView, "scaleY", start, end)
-                .setDuration(300)
+                .setDuration(ANIMATION_DURATION)
 
         val animatorSet = AnimatorSet()
         animatorSet.playTogether(scaleX, scaleY)
@@ -157,12 +165,15 @@ class MainActivity : AppCompatActivity() {
 
     private fun createTranslateAnimation(start: Float, end: Float): Animator {
         return ObjectAnimator.ofFloat(pieChartView, "translationY", start, end)
-                .setDuration(300)
+                .setDuration(ANIMATION_DURATION)
     }
 
     override fun onBackPressed() {
         when {
-            bottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED -> bottomSheetBehavior.state = ViewPagerBottomSheetBehavior.STATE_COLLAPSED
+            bottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED -> {
+                adapter.getFragmentAtPosition(viewPager.currentItem)?.scrollToTop()
+                bottomSheetBehavior.state = ViewPagerBottomSheetBehavior.STATE_COLLAPSED
+            }
             pieChartView.isSliceSelected() -> pieChartView.deselectSlice()
             else -> super.onBackPressed()
         }
