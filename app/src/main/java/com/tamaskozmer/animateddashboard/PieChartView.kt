@@ -222,11 +222,13 @@ class PieChartView : View {
     private fun pieSliceClicked(name: String, slice: PieSlice) {
         Log.d(TAG, "slice: $name")
 
-        selectedSlice = slice
+        if (selectedSlice != slice) {
+            selectedSlice = slice
 
-        sliceSelectedListener?.invoke(name)
+            sliceSelectedListener?.invoke(name)
 
-        calculateChartRotation(slice)
+            calculateChartRotation(slice)
+        }
     }
 
     private fun calculateChartRotation(selectedSlice: PieSlice) {
