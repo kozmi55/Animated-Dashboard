@@ -11,6 +11,8 @@ import android.view.View
 import android.widget.LinearLayout
 import com.tamaskozmer.animateddashboard.bottomsheet.BottomSheetUtils
 import com.tamaskozmer.animateddashboard.bottomsheet.ViewPagerBottomSheetBehavior
+import com.tamaskozmer.animateddashboard.data.Category
+import com.tamaskozmer.animateddashboard.data.DataProvider
 import com.tobishiba.circularviewpager.library.CircularViewPagerHandler
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.bottom_sheet.*

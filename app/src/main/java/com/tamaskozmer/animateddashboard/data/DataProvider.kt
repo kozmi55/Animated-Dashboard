@@ -1,9 +1,10 @@
-package com.tamaskozmer.animateddashboard
+package com.tamaskozmer.animateddashboard.data
 
 import android.content.Context
 import android.support.v4.content.ContextCompat
+import com.tamaskozmer.animateddashboard.R
 
-class DataProvider(val context: Context) {
+class DataProvider(private val context: Context) {
 
     fun getData(): List<Category> {
         val housing = Category("Housing", listOf(

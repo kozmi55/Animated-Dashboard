@@ -1,4 +1,4 @@
-package com.tamaskozmer.animateddashboard
+package com.tamaskozmer.animateddashboard.data
 
 import java.io.Serializable
 

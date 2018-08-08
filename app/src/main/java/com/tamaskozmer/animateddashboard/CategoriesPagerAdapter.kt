@@ -3,6 +3,7 @@ package com.tamaskozmer.animateddashboard
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
 import android.view.ViewGroup
+import com.tamaskozmer.animateddashboard.data.Category
 import com.tobishiba.circularviewpager.library.BaseCircularViewPagerAdapter
 
 class CategoriesPagerAdapter(fm: FragmentManager, private val categories: List<Category>) : BaseCircularViewPagerAdapter<Category>(fm, categories) {
