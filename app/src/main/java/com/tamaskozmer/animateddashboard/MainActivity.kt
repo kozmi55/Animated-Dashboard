@@ -60,16 +60,21 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onPageSelected(position: Int) {
-                if (position >= 0 && position < data.size) {
-                    val name = data[position].name
-                    pieChartView.selectSlice(name)
-
-                    if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_COLLAPSED) {
-                        adapter.getFragmentAtPosition(viewPager.currentItem)?.scrollToTop()
-                    }
+                when {
+                    position >= 0 -> sliceSelected(position % data.size)
+                    position == -1 -> sliceSelected(data.size - 1)
                 }
             }
         })
+    }
+
+    private fun sliceSelected(index: Int) {
+        val name = data[index].name
+        pieChartView.selectSlice(name)
+
+        if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_COLLAPSED) {
+            adapter.getFragmentAtPosition(viewPager.currentItem)?.scrollToTop()
+        }
     }
 
     private fun initBottomSheet() {
@@ -103,7 +108,7 @@ class MainActivity : AppCompatActivity() {
 
 
     private fun initPieChartListeners() {
-        pieChartView.sliceSelectedListener = { key ->
+        pieChartView.sliceClickedListener = { key ->
             selectViewPagerPage(key)
 
             if (!sliceSelected) {

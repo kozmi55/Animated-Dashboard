@@ -44,7 +44,7 @@ class PieChartView : View {
 
     private var selectedSlice: PieSlice? = null
 
-    var sliceSelectedListener: ((String) -> Unit)? = null
+    var sliceClickedListener: ((String) -> Unit)? = null
     var sliceDeselectedListener: (() -> Unit)? = null
 
     constructor(context: Context) : super(context) {
@@ -225,7 +225,7 @@ class PieChartView : View {
         if (selectedSlice != slice) {
             selectedSlice = slice
 
-            sliceSelectedListener?.invoke(name)
+            sliceClickedListener?.invoke(name)
 
             calculateChartRotation(slice)
         }
@@ -249,7 +249,8 @@ class PieChartView : View {
     fun selectSlice(key: String) {
         val slice = pieSlices[key]
         if (slice != null && slice != selectedSlice) {
-            pieSliceClicked(key, slice)
+            selectedSlice = slice
+            calculateChartRotation(slice)
         }
     }
 
