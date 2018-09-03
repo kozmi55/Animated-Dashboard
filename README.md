@@ -4,7 +4,9 @@ This is an example project showcasing the implementation of an animated dashboar
 
 https://www.uplabs.com/posts/16-dashboard-navigation
 
-Video: https://youtu.be/YDrpKViXkyY
+![Example](https://github.com/kozmi55/Animated-Dashboard/blob/master/example.gif "Example")
+
+Extended example video: https://youtu.be/YDrpKViXkyY
 
 ## Features
 
